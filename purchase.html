@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUXY Retail World | Purchase</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background-color: #0a0a0a; 
+            color: #f5f5f0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        /* Navigation */
+        nav { 
+            background: rgba(26, 26, 26, 0.95); 
+            padding: 15px 0; 
+            position: fixed; 
+            width: 100%; 
+            top: 0; 
+            z-index: 1000;
+            border-bottom: 1px solid #d4af37;
+        }
+        .nav-flex { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .logo { 
+            font-family: Georgia, 'Times New Roman', serif;
+            color: #d4af37; 
+            font-size: 28px; 
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .logo span { 
+            color: #fff; 
+            font-size: 11px; 
+            display: block; 
+            font-family: sans-serif; 
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+        .nav-links { display: flex; gap: 30px; }
+        .nav-links a { 
+            color: #ccc; 
+            text-decoration: none; 
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            padding: 5px 0;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-links a:hover, .nav-links a.active { 
+            color: #d4af37;
+            border-bottom-color: #d4af37;
+        }
+        .mobile-menu-btn { 
+            display: none; 
+            background: none; 
+            border: none; 
+            color: #fff; 
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        /* Main */
+        main { padding-top: 120px; min-height: 100vh; padding-bottom: 80px; }
+        
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .page-header h1 {
+            font-family: Georgia, serif;
+            font-size: 38px;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+        .page-header h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background: #d4af37;
+            margin: 20px auto 0;
+        }
+        .page-header p {
+            color: #999;
+            font-size: 18px;
+        }
+        
+        /* Two Column Layout */
+        .two-col { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 40px; 
+        }
+        
+        /* Box Styles */
+        .box { 
+            background: #111; 
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 35px;
+            margin-bottom: 30px;
+        }
+        .box h2 { 
+            color: #d4af37; 
+            font-family: Georgia, serif;
+            font-size: 24px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        /* Cart Items */
+        .cart-item { 
+            display: flex; 
+            gap: 20px; 
+            padding: 20px;
+            background: #0a0a0a;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+            transition: all 0.3s;
+        }
+        .cart-item:hover {
+            border-color: #444;
+        }
+        .cart-item img { 
+            width: 100px; 
+            height: 100px; 
+            object-fit: cover; 
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        .cart-item .info { flex: 1; }
+        .cart-item h4 { 
+            color: #fff; 
+            margin-bottom: 10px;
+            font-family: Georgia, serif;
+            font-size: 20px;
+        }
+        .cart-item .price { 
+            color: #d4af37; 
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        .cart-item .cat { 
+            color: #666; 
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .cart-item .remove-btn { 
+            background: none; 
+            border: none; 
+            color: #666; 
+            cursor: pointer;
+            font-size: 20px;
+            padding: 10px;
+            transition: all 0.3s;
+            align-self: flex-start;
+        }
+        .cart-item .remove-btn:hover { 
+            color: #dc3545;
+            transform: scale(1.2);
+        }
+        
+        .total-row { 
+            display: flex; 
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 25px;
+            border-top: 2px solid #333;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .total-row span:first-child { color: #fff; }
+        .total-row span:last-child { 
+            color: #d4af37;
+            font-size: 28px;
+        }
+        
+        .empty-cart { 
+            text-align: center; 
+            padding: 60px 20px;
+            color: #666;
+        }
+        .empty-cart i { 
+            font-size: 64px; 
+            margin-bottom: 20px; 
+            color: #333; 
+            display: block;
+        }
+        .empty-cart a {
+            color: #d4af37;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        /* Action Buttons */
+        .btn { 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn i { font-size: 20px; }
+        .btn-whatsapp { 
+            background: #25d366; 
+            color: #fff; 
+        }
+        .btn-whatsapp:hover { 
+            background: #128c7e; 
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(37, 211, 102, 0.3);
+        }
+        .btn-phone { 
+            background: #007bff; 
+            color: #fff; 
+        }
+        .btn-phone:hover { 
+            background: #0056b3; 
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 123, 255, 0.3);
+        }
+        .btn-gold { 
+            background: transparent; 
+            border: 2px solid #d4af37; 
+            color: #d4af37;
+        }
+        .btn-gold:hover { 
+            background: #d4af37; 
+            color: #000;
+            transform: translateY(-3px);
+        }
+        
+        .note { 
+            text-align: center; 
+            color: #666; 
+            font-size: 14px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+        
+        /* Reviews */
+        .review-item { 
+            background: #0a0a0a;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #d4af37;
+            transition: all 0.3s;
+        }
+        .review-item:hover {
+            border-left-width: 6px;
+        }
+        .review-item p { 
+            color: #ccc; 
+            font-style: italic;
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+        .review-item .meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .review-item .author { 
+            color: #d4af37; 
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .review-item .date { 
+            color: #666; 
+            font-size: 13px;
+        }
+        
+        .review-form { 
+            margin-top: 30px; 
+            padding-top: 30px; 
+            border-top: 2px solid #333; 
+        }
+        .review-form h3 { 
+            color: #fff; 
+            margin-bottom: 25px;
+            font-size: 20px;
+            font-family: Georgia, serif;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group input, 
+        .form-group textarea { 
+            width: 100%; 
+            padding: 15px; 
+            background: #0a0a0a; 
+            border: 1px solid #444; 
+            border-radius: 10px; 
+            color: #fff; 
+            font-family: inherit;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        .form-group input:focus, 
+        .form-group textarea:focus { 
+            outline: none; 
+            border-color: #d4af37;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.1);
+        }
+        .form-group input::placeholder,
+        .form-group textarea::placeholder { color: #555; }
+        
+        /* Footer */
+        footer { 
+            background: #000; 
+            padding: 50px 0 30px; 
+            text-align: center;
+            border-top: 1px solid #222;
+        }
+        .social-links { 
+            display: flex; 
+            justify-content: center; 
+            gap: 40px; 
+            margin-bottom: 30px; 
+        }
+        .social-links a { 
+            color: #666; 
+            font-size: 28px;
+            transition: all 0.3s;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px solid #333;
+            text-decoration: none;
+        }
+        .social-links a:hover { 
+            color: #fff;
+            border-color: currentColor;
+            transform: translateY(-3px);
+        }
+        .social-links a.whatsapp:hover { color: #25d366; border-color: #25d366; }
+        .social-links a.tiktok:hover { color: #ff0050; border-color: #ff0050; }
+        .social-links a.phone:hover { color: #007bff; border-color: #007bff; }
+        
+        /* Toast */
+        .toast { 
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px;
+            background: #d4af37;
+            color: #000;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 16px;
+            transform: translateY(150px);
+            opacity: 0;
+            transition: all 0.4s;
+            z-index: 3000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.error {
+            background: #dc3545;
+            color: #fff;
+        }
+        
+        /* Mobile */
+        @media (max-width: 768px) {
+            .two-col { grid-template-columns: 1fr; gap: 20px; }
+            .nav-links { display: none; }
+            .mobile-menu-btn { display: block; }
+            .page-header h1 { font-size: 30px; }
+            .box { padding: 25px; }
+            .cart-item { flex-direction: column; }
+            .cart-item img { width: 100%; height: 200px; }
+            .total-row { font-size: 20px; }
+            .total-row span:last-child { font-size: 24px; }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="container nav-flex">
+            <a href="index.html" class="logo">
+                SUXY
+                <span>Retail World</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="order.html">Order</a>
+                <a href="purchase.html" class="active">Purchase</a>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div id="mobileMenu" style="display: none;">
+            <div class="container" style="padding: 20px;">
+                <a href="index.html" style="display: block; color: #ccc; padding: 12px 0; border-bottom: 1px solid #333; text-decoration: none;">Home</a>
+                <a href="order.html" style="display: block; color: #ccc; padding: 12px 0; border-bottom: 1px solid #333; text-decoration: none;">Order</a>
+                <a href="purchase.html" style="display: block; color: #d4af37; padding: 12px 0; text-decoration: none;">Purchase</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="page-header">
+            <h1>Review & Complete Purchase</h1>
+            <p>Review your selected items and complete your order</p>
+        </div>
+        
+        <div class="two-col">
+            <!-- Left: Order Summary -->
+            <div>
+                <div class="box">
+                    <h2><i class="fas fa-shopping-bag"></i> Selected Items</h2>
+                    <div id="cartItems"></div>
+                    <div class="total-row" id="totalRow" style="display: none;">
+                        <span>Total Amount</span>
+                        <span id="totalPrice">₦0</span>
+                    </div>
+                </div>
+                
+                <div class="box">
+                    <h2><i class="fas fa-credit-card"></i> Complete Order</h2>
+                    <a id="waLink" href="#" target="_blank" class="btn btn-whatsapp">
+                        <i class="fab fa-whatsapp"></i> Purchase via WhatsApp
+                    </a>
+                    <a href="tel:+2347012305403" class="btn btn-phone">
+                        <i class="fas fa-phone"></i> Call Now
+                    </a>
+                    <p class="note">
+                        <i class="fas fa-info-circle"></i> 
+                        Pickup: Ekpoma/Benin | Waybill: Lagos | Same-day dispatch available
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Right: Reviews -->
+            <div>
+                <div class="box">
+                    <h2><i class="fas fa-comments"></i> Customer Reviews</h2>
+                    <div id="reviewsList" style="max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
+                    
+                    <div class="review-form">
+                        <h3>Share Your Experience</h3>
+                        <form onsubmit="submitReview(event)">
+                            <div class="form-group">
+                                <input type="text" id="reviewName" placeholder="Your Name" required>
+                            </div>
+                            <div class="form-group">
+                                <textarea id="reviewText" rows="4" placeholder="Tell us about your experience with SUXY Retail World..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-gold">
+                                <i class="fas fa-paper-plane"></i> Submit Review
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="social-links">
+            <a href="https://wa.me/2347012305403" target="_blank" class="whatsapp" title="WhatsApp">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+            <a href="#" class="tiktok" title="TikTok">
+                <i class="fab fa-tiktok"></i>
+            </a>
+            <a href="tel:+2347012305403" class="phone" title="Call Now">
+                <i class="fas fa-phone"></i>
+            </a>
+        </div>
+        <p style="color: #555; font-size: 14px;">&copy; 2026 SUXY Retail World. All rights reserved.</p>
+    </footer>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOoMeyH1QKMNhJ6ICfeLo2kEFeeYTEFcg",
+            authDomain: "suxyretailworld.firebaseapp.com",
+            projectId: "suxyretailworld",
+            storageBucket: "suxyretailworld.firebasestorage.app",
+            messagingSenderId: "615863570909",
+            appId: "1:615863570909:web:79f66a04ec60c9845b2634"
+        };
+
+        let db;
+        let cart = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCart();
+            
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                loadReviews();
+                
+                // Real-time reviews
+                db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(() => {
+                    loadReviews();
+                });
+            } catch (e) {
+                console.error('Firebase error:', e);
+            }
+        });
+
+        function loadCart() {
+            cart = JSON.parse(localStorage.getItem('suxy_cart')) || [];
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            const totalRow = document.getElementById('totalRow');
+            const totalPrice = document.getElementById('totalPrice');
+            const waLink = document.getElementById('waLink');
+            
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-basket"></i>
+                        <h3>Your cart is empty</h3>
+                        <p>Browse our collection and select items to purchase</p>
+                        <br>
+                        <a href="order.html">Start Shopping <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                `;
+                totalRow.style.display = 'none';
+                waLink.style.opacity = '0.5';
+                waLink.style.pointerEvents = 'none';
+                return;
+            }
+            
+            waLink.style.opacity = '1';
+            waLink.style.pointerEvents = 'auto';
+            
+            let total = 0;
+            let message = "Hello SUXY Retail World!%0A%0AI would like to order the following items:%0A%0A";
+            
+            container.innerHTML = cart.map((item, idx) => {
+                total += Number(item.price);
+                message += `${idx + 1}. ${item.name}%0A   Price: ₦${item.price.toLocaleString()}%0A   Category: ${item.category}%0A%0A`;
+                
+                return `
+                    <div class="cart-item">
+                        <img src="${item.imageUrl}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/100?text=No+Image'">
+                        <div class="info">
+                            <h4>${item.name}</h4>
+                            <p class="price">₦${item.price.toLocaleString()}</p>
+                            <p class="cat">${item.category}</p>
+                        </div>
+                        <button class="remove-btn" onclick="removeItem('${item.id}')" title="Remove item">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            
+            totalPrice.textContent = '₦' + total.toLocaleString();
+            totalRow.style.display = 'flex';
+            
+            message += `Total Amount: ₦${total.toLocaleString()}%0A%0APlease send your payment details. Thank you!`;
+            waLink.href = `https://wa.me/2347012305403?text=${message}`;
+        }
+
+        function removeItem(id) {
+            cart = cart.filter(c => c.id !== id);
+            localStorage.setItem('suxy_cart', JSON.stringify(cart));
+            renderCart();
+            showToast('Item removed from cart');
+        }
+
+        async function loadReviews() {
+            if (!db) return;
+            try {
+                const snapshot = await db.collection('reviews').orderBy('timestamp', 'desc').get();
+                const reviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                const container = document.getElementById('reviewsList');
+                if (reviews.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <i class="fas fa-comment-dots" style="font-size: 48px; margin-bottom: 20px; display: block;"></i>
+                            <p>No reviews yet. Be the first to share your experience!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = reviews.map(r => `
+                    <div class="review-item">
+                        <p>"${r.text}"</p>
+                        <div class="meta">
+                            <span class="author">
+                                <i class="fas fa-user-circle"></i> ${r.name}
+                            </span>
+                            <span class="date">
+                                ${r.timestamp ? new Date(r.timestamp.toDate()).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Reviews error:', e);
+            }
+        }
+
+        async function submitReview(e) {
+            e.preventDefault();
+            
+            if (!db) {
+                showToast('Database not connected', true);
+                return;
+            }
+            
+            const name = document.getElementById('reviewName').value.trim();
+            const text = document.getElementById('reviewText').value.trim();
+            
+            if (!name || !text) {
+                showToast('Please fill all fields', true);
+                return;
+            }
+            
+            try {
+                await db.collection('reviews').add({
+                    name: name,
+                    text: text,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                showToast('Thank you for your review!');
+                document.getElementById('reviewName').value = '';
+                document.getElementById('reviewText').value = '';
+                loadReviews();
+                
+            } catch (err) {
+                console.error('Review error:', err);
+                showToast('Error submitting review', true);
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = isError ? 'toast error show' : 'toast show';
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+    </script>
+
+</body>
+</html>
