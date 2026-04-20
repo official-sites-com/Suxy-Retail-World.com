@@ -152,6 +152,8 @@
             object-fit: cover; 
             border-radius: 10px;
             border: 1px solid #333;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
         }
         .cart-item .info { flex: 1; }
         .cart-item h4 { 
@@ -487,7 +489,7 @@
                     <div id="cartItems"></div>
                     <div class="total-row" id="totalRow" style="display: none;">
                         <span>Total Amount</span>
-                        <span id="totalPrice">₦0</span>
+                        <span id="totalPrice">N0</span>
                     </div>
                 </div>
                 
@@ -570,6 +572,13 @@
         let validItemIds = new Set();
         let purchaseInitiated = false;
 
+        // FIX 3 & 5: Image transformation configuration for purchase page
+        const IMAGE_CONFIG = {
+            cartThumbnail: { width: 100, height: 100, fit: 'c_fill' },
+            quality: 'q_auto',
+            format: 'f_auto'
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
             loadCart();
             updateCartBadge();
@@ -579,19 +588,16 @@
                 db = firebase.firestore();
                 loadReviews();
                 
-                // Real-time reviews
                 db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(() => {
                     loadReviews();
                 });
                 
-                // Real-time item validation - clean cart if items deleted/expired
                 db.collection('items').onSnapshot((snapshot) => {
                     const now = new Date();
                     validItemIds = new Set();
                     
                     snapshot.docs.forEach(doc => {
                         const item = doc.data();
-                        // Only track items that are NOT expired and NOT deleted
                         if (!item.expiry || new Date(item.expiry) >= now) {
                             if (!item.deletedAt) {
                                 validItemIds.add(doc.id);
@@ -599,7 +605,6 @@
                         }
                     });
                     
-                    // Clean cart if needed (only if not currently purchasing)
                     if (!purchaseInitiated) {
                         validateCartAgainstInventory();
                     }
@@ -610,10 +615,28 @@
             }
         });
 
+        // FIX 3 & 5: Apply Cloudinary transformations
+        function getTransformedImageUrl(url, width, height, fit) {
+            if (!url) return 'https://via.placeholder.com/' + width + 'x' + height + '?text=No+Image';
+            
+            fit = fit || 'c_fill';
+            
+            // If already transformed, update dimensions
+            if (url.includes('/upload/') && (url.includes('w_') || url.includes('q_auto'))) {
+                return url.replace(/w_\d+,h_\d+,c_\w+/g, 'w_' + width + ',h_' + height + ',' + fit);
+            }
+            
+            // If Cloudinary URL without transformations
+            if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+                var transform = 'w_' + width + ',h_' + height + ',' + fit + ',' + IMAGE_CONFIG.quality + ',' + IMAGE_CONFIG.format;
+                return url.replace('/upload/', '/upload/' + transform + '/');
+            }
+            
+            return url;
+        }
+
         function loadCart() {
             cart = JSON.parse(localStorage.getItem('suxy_cart')) || [];
-            // Don't render yet - wait for Firebase to validate inventory
-            // If Firebase fails, we'll render what we have
             setTimeout(() => {
                 if (validItemIds.size === 0) {
                     renderCart();
@@ -624,35 +647,27 @@
         function validateCartAgainstInventory() {
             if (validItemIds.size === 0) return;
             
-            const originalCount = cart.length;
-            const now = new Date();
+            var originalCount = cart.length;
+            var now = new Date();
             
-            cart = cart.filter(item => {
-                // Remove if item ID not in valid items set
+            cart = cart.filter(function(item) {
                 if (!validItemIds.has(item.id)) return false;
-                
-                // Double-check expiry from cart data itself
                 if (item.expiry && new Date(item.expiry) < now) return false;
-                
-                // Check if marked deleted in cart data
                 if (item.deletedAt) return false;
-                
                 return true;
             });
             
-            const removedCount = originalCount - cart.length;
+            var removedCount = originalCount - cart.length;
             
             if (removedCount > 0) {
                 localStorage.setItem('suxy_cart', JSON.stringify(cart));
-                showToast(`${removedCount} unavailable item(s) removed from cart`, true);
+                showToast(removedCount + ' unavailable item(s) removed from cart', true);
                 
-                // Show notice
-                const notice = document.getElementById('removedNotice');
-                const noticeText = document.getElementById('removedText');
-                noticeText.textContent = `${removedCount} item(s) were removed from your cart because they are no longer available.`;
+                var notice = document.getElementById('removedNotice');
+                var noticeText = document.getElementById('removedText');
+                noticeText.textContent = removedCount + ' item(s) were removed from your cart because they are no longer available.';
                 notice.style.display = 'flex';
                 
-                // Hide notice after 5 seconds
                 setTimeout(() => {
                     notice.style.display = 'none';
                 }, 5000);
@@ -663,10 +678,10 @@
         }
 
         function renderCart() {
-            const container = document.getElementById('cartItems');
-            const totalRow = document.getElementById('totalRow');
-            const totalPrice = document.getElementById('totalPrice');
-            const waLink = document.getElementById('waLink');
+            var container = document.getElementById('cartItems');
+            var totalRow = document.getElementById('totalRow');
+            var totalPrice = document.getElementById('totalPrice');
+            var waLink = document.getElementById('waLink');
             
             if (cart.length === 0) {
                 container.innerHTML = `
@@ -687,38 +702,45 @@
             waLink.style.opacity = '1';
             waLink.style.pointerEvents = 'auto';
             
-            let total = 0;
-            let message = "Hello SUXY Retail World!%0A%0AI would like to order the following items:%0A%0A";
+            var total = 0;
+            var message = "Hello SUXY Retail World!%0A%0AI would like to order the following items:%0A%0A";
             
-            container.innerHTML = cart.map((item, idx) => {
+            container.innerHTML = cart.map(function(item, idx) {
                 total += Number(item.price);
-                message += `${idx + 1}. ${item.name}%0A   Price: ₦${item.price.toLocaleString()}%0A   Category: ${item.category}%0A%0A`;
+                message += (idx + 1) + '. ' + item.name + '%0A   Price: N' + item.price.toLocaleString() + '%0A   Category: ' + item.category + '%0A%0A';
+                
+                // FIX 3 & 5: Apply transformations for cart thumbnails
+                var thumbnailUrl = getTransformedImageUrl(
+                    item.imageUrl || item.thumbnailUrl,
+                    IMAGE_CONFIG.cartThumbnail.width,
+                    IMAGE_CONFIG.cartThumbnail.height,
+                    IMAGE_CONFIG.cartThumbnail.fit
+                );
                 
                 return `
                     <div class="cart-item">
-                        <img src="${item.imageUrl}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/100?text=No+Image'">
+                        <img src="` + thumbnailUrl + `" alt="` + item.name + `" loading="lazy" decoding="async" onerror="this.src='https://via.placeholder.com/100?text=No+Image'">
                         <div class="info">
-                            <h4>${item.name}</h4>
-                            <p class="price">₦${item.price.toLocaleString()}</p>
-                            <p class="cat">${item.category}</p>
+                            <h4>` + item.name + `</h4>
+                            <p class="price">N` + item.price.toLocaleString() + `</p>
+                            <p class="cat">` + item.category + `</p>
                         </div>
-                        <button class="remove-btn" onclick="removeItem('${item.id}')" title="Remove item">
+                        <button class="remove-btn" onclick="removeItem('` + item.id + `')" title="Remove item">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                 `;
             }).join('');
             
-            totalPrice.textContent = '₦' + total.toLocaleString();
+            totalPrice.textContent = 'N' + total.toLocaleString();
             totalRow.style.display = 'flex';
             
-            message += `Total Amount: ₦${total.toLocaleString()}%0A%0APlease send your payment details. Thank you!`;
-            waLink.href = `https://wa.me/2347012305403?text=${message}`;
+            message += 'Total Amount: N' + total.toLocaleString() + '%0A%0APlease send your payment details. Thank you!';
+            waLink.href = 'https://wa.me/2347012305403?text=' + message;
         }
 
         function handlePurchase() {
             purchaseInitiated = true;
-            // Clear cart after purchase initiated
             setTimeout(() => {
                 localStorage.removeItem('suxy_cart');
                 cart = [];
@@ -737,7 +759,7 @@
         }
 
         function updateCartBadge() {
-            const badge = document.getElementById('cartBadge');
+            var badge = document.getElementById('cartBadge');
             if (cart.length > 0) {
                 badge.textContent = cart.length;
                 badge.style.display = 'inline';
@@ -749,10 +771,10 @@
         async function loadReviews() {
             if (!db) return;
             try {
-                const snapshot = await db.collection('reviews').orderBy('timestamp', 'desc').get();
-                const reviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                var snapshot = await db.collection('reviews').orderBy('timestamp', 'desc').get();
+                var reviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
-                const container = document.getElementById('reviewsList');
+                var container = document.getElementById('reviewsList');
                 if (reviews.length === 0) {
                     container.innerHTML = `
                         <div style="text-align: center; padding: 40px; color: #666;">
@@ -765,13 +787,13 @@
                 
                 container.innerHTML = reviews.map(r => `
                     <div class="review-item">
-                        <p>"${r.text}"</p>
+                        <p>"` + r.text + `"</p>
                         <div class="meta">
                             <span class="author">
-                                <i class="fas fa-user-circle"></i> ${r.name}
+                                <i class="fas fa-user-circle"></i> ` + r.name + `
                             </span>
                             <span class="date">
-                                ${r.timestamp ? new Date(r.timestamp.toDate()).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
+                                ` + (r.timestamp ? new Date(r.timestamp.toDate()).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '') + `
                             </span>
                         </div>
                     </div>
@@ -789,8 +811,8 @@
                 return;
             }
             
-            const name = document.getElementById('reviewName').value.trim();
-            const text = document.getElementById('reviewText').value.trim();
+            var name = document.getElementById('reviewName').value.trim();
+            var text = document.getElementById('reviewText').value.trim();
             
             if (!name || !text) {
                 showToast('Please fill all fields', true);
@@ -816,12 +838,12 @@
         }
 
         function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
+            var menu = document.getElementById('mobileMenu');
             menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
         }
 
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('toast');
+        function showToast(message, isError) {
+            var toast = document.getElementById('toast');
             toast.textContent = message;
             toast.className = isError ? 'toast error show' : 'toast show';
             
