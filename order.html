@@ -178,6 +178,16 @@
             font-size: 18px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
+        .item-card.unavailable {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(0.8);
+        }
+        .item-card.unavailable:hover {
+            transform: none;
+            border-color: #333;
+            box-shadow: none;
+        }
         .item-image { 
             height: 280px; 
             overflow: hidden;
@@ -202,6 +212,10 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
+        }
+        .item-badge.sold-out {
+            background: #dc3545;
+            color: #fff;
         }
         .item-info { padding: 25px; }
         .item-header { 
@@ -255,6 +269,9 @@
         }
         .item-card.selected .item-action {
             color: #fff;
+        }
+        .item-card.unavailable .item-action {
+            color: #666;
         }
         
         /* Empty State */
@@ -325,6 +342,29 @@
         }
         .floating-cart.hidden { display: none; }
         
+        /* Cart Sync Notice */
+        .sync-notice {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(212, 175, 55, 0.95);
+            color: #000;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        
         /* Footer */
         footer { 
             background: #000; 
@@ -380,6 +420,16 @@
             .floating-cart a {
                 justify-content: center;
                 padding: 16px 25px;
+            }
+            .sync-notice {
+                left: 20px;
+                right: 20px;
+                transform: none;
+                text-align: center;
+            }
+            @keyframes slideDown {
+                from { transform: translateY(-20px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
             }
         }
     </style>
@@ -449,13 +499,19 @@
         </div>
     </main>
 
+    <!-- Sync Notice -->
+    <div id="syncNotice" class="sync-notice">
+        <i class="fas fa-sync-alt fa-spin"></i>
+        <span>Updating your cart...</span>
+    </div>
+
     <!-- Footer -->
     <footer>
         <div class="social-links">
             <a href="https://wa.me/2347012305403" target="_blank" class="whatsapp" title="WhatsApp">
                 <i class="fab fa-whatsapp"></i>
             </a>
-            <a href="#" class="tiktok" title="TikTok">
+            <a href="https://vm.tiktok.com/ZS9LqM85v8ubD-5rRDV/" target="_blank" class="tiktok" title="TikTok">
                 <i class="fab fa-tiktok"></i>
             </a>
             <a href="tel:+2347012305403" class="phone" title="Call Now">
@@ -482,8 +538,10 @@
 
         let db;
         let allItems = [];
+        let validItemIds = new Set();
         let cart = JSON.parse(localStorage.getItem('suxy_cart')) || [];
         let currentFilter = 'all';
+        let isSyncing = false;
 
         document.addEventListener('DOMContentLoaded', function() {
             // Check URL params
@@ -501,11 +559,30 @@
                 
                 // Real-time listener
                 db.collection('items').onSnapshot((snapshot) => {
-                    allItems = snapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data()
-                    }));
+                    const now = new Date();
+                    allItems = [];
+                    validItemIds.clear();
+                    
+                    snapshot.docs.forEach(doc => {
+                        const item = {
+                            id: doc.id,
+                            ...doc.data()
+                        };
+                        allItems.push(item);
+                        
+                        // Track valid items (not expired, not deleted)
+                        const isExpired = item.expiry && new Date(item.expiry) < now;
+                        const isDeleted = item.deletedAt !== null && item.deletedAt !== undefined;
+                        
+                        if (!isExpired && !isDeleted) {
+                            validItemIds.add(doc.id);
+                        }
+                    });
+                    
                     renderItems();
+                    
+                    // Validate cart against current inventory
+                    validateCart();
                 });
                 
             } catch (e) {
@@ -526,10 +603,9 @@
             const container = document.getElementById('itemsContainer');
             const now = new Date();
             
-            // Filter items
+            // Filter items for display
             let filtered = allItems.filter(item => {
                 if (currentFilter !== 'all' && item.category !== currentFilter) return false;
-                if (item.expiry && new Date(item.expiry) < now) return false;
                 return true;
             });
             
@@ -546,11 +622,18 @@
             
             container.innerHTML = filtered.map(item => {
                 const isSelected = cart.find(c => c.id === item.id);
+                const isExpired = item.expiry && new Date(item.expiry) < now;
+                const isDeleted = item.deletedAt !== null && item.deletedAt !== undefined;
+                const isUnavailable = isExpired || isDeleted;
+                
                 return `
-                    <div class="item-card ${isSelected ? 'selected' : ''}" onclick="toggleCart('${item.id}')">
+                    <div class="item-card ${isSelected ? 'selected' : ''} ${isUnavailable ? 'unavailable' : ''}" 
+                         onclick="${isUnavailable ? '' : `toggleCart('${item.id}')`}">
                         <div class="item-image">
                             <img src="${item.imageUrl}" alt="${item.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x280?text=No+Image'">
-                            <span class="item-badge">${item.category}</span>
+                            <span class="item-badge ${isUnavailable ? 'sold-out' : ''}">
+                                ${isUnavailable ? (isDeleted ? 'Removed' : 'Expired') : item.category}
+                            </span>
                         </div>
                         <div class="item-info">
                             <div class="item-header">
@@ -561,7 +644,11 @@
                             <div class="item-footer">
                                 <span class="item-category">${item.category}</span>
                                 <span class="item-action">
-                                    ${isSelected ? '<i class="fas fa-check"></i> Selected' : '<i class="fas fa-plus"></i> Select Item'}
+                                    ${isUnavailable 
+                                        ? '<i class="fas fa-ban"></i> Unavailable' 
+                                        : (isSelected 
+                                            ? '<i class="fas fa-check"></i> Selected' 
+                                            : '<i class="fas fa-plus"></i> Select Item')}
                                 </span>
                             </div>
                         </div>
@@ -571,6 +658,12 @@
         }
 
         function toggleCart(id) {
+            // Prevent adding unavailable items
+            if (!validItemIds.has(id)) {
+                showToast('This item is no longer available');
+                return;
+            }
+            
             const idx = cart.findIndex(c => c.id === id);
             
             if (idx > -1) {
@@ -579,14 +672,75 @@
             } else {
                 const item = allItems.find(i => i.id === id);
                 if (item) {
-                    cart.push(item);
-                    showToast('Item added to cart');
+                    // Only add if still valid
+                    const now = new Date();
+                    const isExpired = item.expiry && new Date(item.expiry) < now;
+                    const isDeleted = item.deletedAt !== null && item.deletedAt !== undefined;
+                    
+                    if (!isExpired && !isDeleted) {
+                        cart.push(item);
+                        showToast('Item added to cart');
+                    } else {
+                        showToast('This item is no longer available');
+                        renderItems(); // Refresh to show updated status
+                    }
                 }
             }
             
             saveCart();
             renderItems();
             updateCartUI();
+        }
+
+        function validateCart() {
+            if (cart.length === 0) return;
+            
+            const originalCount = cart.length;
+            const now = new Date();
+            
+            const removedItems = [];
+            
+            cart = cart.filter(item => {
+                // Check if item still exists in inventory
+                const liveItem = allItems.find(i => i.id === item.id);
+                
+                if (!liveItem) {
+                    removedItems.push(item.name);
+                    return false;
+                }
+                
+                // Check expiry
+                if (liveItem.expiry && new Date(liveItem.expiry) < now) {
+                    removedItems.push(item.name);
+                    return false;
+                }
+                
+                // Check deletion
+                if (liveItem.deletedAt !== null && liveItem.deletedAt !== undefined) {
+                    removedItems.push(item.name);
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            const removedCount = originalCount - cart.length;
+            
+            if (removedCount > 0) {
+                saveCart();
+                updateCartUI();
+                renderItems(); // Refresh card states
+                
+                // Show sync notice
+                const notice = document.getElementById('syncNotice');
+                const noticeText = notice.querySelector('span');
+                noticeText.textContent = `${removedCount} item(s) removed - no longer available`;
+                notice.style.display = 'flex';
+                
+                setTimeout(() => {
+                    notice.style.display = 'none';
+                }, 4000);
+            }
         }
 
         function saveCart() {
@@ -639,8 +793,12 @@
         }
 
         function showToast(message) {
-            // Create toast element
+            // Remove existing toast if any
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) existingToast.remove();
+            
             const toast = document.createElement('div');
+            toast.className = 'toast-notification';
             toast.style.cssText = `
                 position: fixed;
                 bottom: 30px;
@@ -659,9 +817,9 @@
             document.body.appendChild(toast);
             
             // Animate in
-            setTimeout(() => {
+            requestAnimationFrame(() => {
                 toast.style.transform = 'translateX(-50%) translateY(0)';
-            }, 10);
+            });
             
             // Remove after delay
             setTimeout(() => {
