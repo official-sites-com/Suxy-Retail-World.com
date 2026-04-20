@@ -60,6 +60,15 @@
             color: #d4af37;
             border-bottom-color: #d4af37;
         }
+        .cart-badge {
+            background: #d4af37;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-left: 5px;
+            font-weight: bold;
+        }
         .mobile-menu-btn { 
             display: none; 
             background: none; 
@@ -339,6 +348,23 @@
         .form-group input::placeholder,
         .form-group textarea::placeholder { color: #555; }
         
+        /* Removed Items Notice */
+        .removed-notice {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            color: #ff6b6b;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .removed-notice i {
+            font-size: 18px;
+        }
+        
         /* Footer */
         footer { 
             background: #000; 
@@ -424,7 +450,10 @@
             <div class="nav-links">
                 <a href="index.html">Home</a>
                 <a href="order.html">Order</a>
-                <a href="purchase.html" class="active">Purchase</a>
+                <a href="purchase.html" class="active">
+                    Purchase
+                    <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
+                </a>
             </div>
             <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
                 <i class="fas fa-bars"></i>
@@ -451,6 +480,10 @@
             <div>
                 <div class="box">
                     <h2><i class="fas fa-shopping-bag"></i> Selected Items</h2>
+                    <div id="removedNotice" style="display: none;" class="removed-notice">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="removedText">Some items were removed from your cart because they are no longer available.</span>
+                    </div>
                     <div id="cartItems"></div>
                     <div class="total-row" id="totalRow" style="display: none;">
                         <span>Total Amount</span>
@@ -460,7 +493,7 @@
                 
                 <div class="box">
                     <h2><i class="fas fa-credit-card"></i> Complete Order</h2>
-                    <a id="waLink" href="#" target="_blank" class="btn btn-whatsapp">
+                    <a id="waLink" href="#" target="_blank" class="btn btn-whatsapp" onclick="handlePurchase()">
                         <i class="fab fa-whatsapp"></i> Purchase via WhatsApp
                     </a>
                     <a href="tel:+2347012305403" class="btn btn-phone">
@@ -504,7 +537,7 @@
             <a href="https://wa.me/2347012305403" target="_blank" class="whatsapp" title="WhatsApp">
                 <i class="fab fa-whatsapp"></i>
             </a>
-            <a href="#" class="tiktok" title="TikTok">
+            <a href="https://vm.tiktok.com/ZS9LqM85v8ubD-5rRDV/" target="_blank" class="tiktok" title="TikTok">
                 <i class="fab fa-tiktok"></i>
             </a>
             <a href="tel:+2347012305403" class="phone" title="Call Now">
@@ -534,9 +567,12 @@
 
         let db;
         let cart = [];
+        let validItemIds = new Set();
+        let purchaseInitiated = false;
 
         document.addEventListener('DOMContentLoaded', function() {
             loadCart();
+            updateCartBadge();
             
             try {
                 firebase.initializeApp(firebaseConfig);
@@ -547,6 +583,28 @@
                 db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(() => {
                     loadReviews();
                 });
+                
+                // Real-time item validation - clean cart if items deleted/expired
+                db.collection('items').onSnapshot((snapshot) => {
+                    const now = new Date();
+                    validItemIds = new Set();
+                    
+                    snapshot.docs.forEach(doc => {
+                        const item = doc.data();
+                        // Only track items that are NOT expired and NOT deleted
+                        if (!item.expiry || new Date(item.expiry) >= now) {
+                            if (!item.deletedAt) {
+                                validItemIds.add(doc.id);
+                            }
+                        }
+                    });
+                    
+                    // Clean cart if needed (only if not currently purchasing)
+                    if (!purchaseInitiated) {
+                        validateCartAgainstInventory();
+                    }
+                });
+                
             } catch (e) {
                 console.error('Firebase error:', e);
             }
@@ -554,7 +612,54 @@
 
         function loadCart() {
             cart = JSON.parse(localStorage.getItem('suxy_cart')) || [];
+            // Don't render yet - wait for Firebase to validate inventory
+            // If Firebase fails, we'll render what we have
+            setTimeout(() => {
+                if (validItemIds.size === 0) {
+                    renderCart();
+                }
+            }, 2000);
+        }
+
+        function validateCartAgainstInventory() {
+            if (validItemIds.size === 0) return;
+            
+            const originalCount = cart.length;
+            const now = new Date();
+            
+            cart = cart.filter(item => {
+                // Remove if item ID not in valid items set
+                if (!validItemIds.has(item.id)) return false;
+                
+                // Double-check expiry from cart data itself
+                if (item.expiry && new Date(item.expiry) < now) return false;
+                
+                // Check if marked deleted in cart data
+                if (item.deletedAt) return false;
+                
+                return true;
+            });
+            
+            const removedCount = originalCount - cart.length;
+            
+            if (removedCount > 0) {
+                localStorage.setItem('suxy_cart', JSON.stringify(cart));
+                showToast(`${removedCount} unavailable item(s) removed from cart`, true);
+                
+                // Show notice
+                const notice = document.getElementById('removedNotice');
+                const noticeText = document.getElementById('removedText');
+                noticeText.textContent = `${removedCount} item(s) were removed from your cart because they are no longer available.`;
+                notice.style.display = 'flex';
+                
+                // Hide notice after 5 seconds
+                setTimeout(() => {
+                    notice.style.display = 'none';
+                }, 5000);
+            }
+            
             renderCart();
+            updateCartBadge();
         }
 
         function renderCart() {
@@ -611,11 +716,34 @@
             waLink.href = `https://wa.me/2347012305403?text=${message}`;
         }
 
+        function handlePurchase() {
+            purchaseInitiated = true;
+            // Clear cart after purchase initiated
+            setTimeout(() => {
+                localStorage.removeItem('suxy_cart');
+                cart = [];
+                renderCart();
+                updateCartBadge();
+                showToast('Order placed! Cart cleared.');
+            }, 1000);
+        }
+
         function removeItem(id) {
             cart = cart.filter(c => c.id !== id);
             localStorage.setItem('suxy_cart', JSON.stringify(cart));
             renderCart();
+            updateCartBadge();
             showToast('Item removed from cart');
+        }
+
+        function updateCartBadge() {
+            const badge = document.getElementById('cartBadge');
+            if (cart.length > 0) {
+                badge.textContent = cart.length;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
         }
 
         async function loadReviews() {
