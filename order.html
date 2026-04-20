@@ -161,7 +161,7 @@
             box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
         }
         .item-card.selected::after {
-            content: '\f00c';
+            content: '\\f00c';
             font-family: 'Font Awesome 6 Free';
             font-weight: 900;
             position: absolute;
@@ -192,12 +192,16 @@
             height: 280px; 
             overflow: hidden;
             position: relative;
+            background: #1a1a1a;
         }
         .item-image img { 
             width: 100%; 
             height: 100%; 
             object-fit: cover;
             transition: transform 0.6s;
+            /* FIX 3: Force image rendering optimization */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
         }
         .item-card:hover .item-image img { transform: scale(1.1); }
         .item-badge {
@@ -541,10 +545,18 @@
         let validItemIds = new Set();
         let cart = JSON.parse(localStorage.getItem('suxy_cart')) || [];
         let currentFilter = 'all';
-        let isSyncing = false;
+
+        // FIX 3 & 5: Image transformation configuration
+        const IMAGE_CONFIG = {
+            cardWidth: 400,
+            cardHeight: 350,
+            quality: 'q_auto',
+            format: 'f_auto',
+            fit: 'c_fill',
+            loading: 'lazy'
+        };
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Check URL params
             const urlParams = new URLSearchParams(window.location.search);
             const cat = urlParams.get('cat');
             if (cat) {
@@ -552,12 +564,10 @@
                 updateFilterButtons();
             }
             
-            // Initialize Firebase
             try {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
                 
-                // Real-time listener
                 db.collection('items').onSnapshot((snapshot) => {
                     const now = new Date();
                     allItems = [];
@@ -570,7 +580,6 @@
                         };
                         allItems.push(item);
                         
-                        // Track valid items (not expired, not deleted)
                         const isExpired = item.expiry && new Date(item.expiry) < now;
                         const isDeleted = item.deletedAt !== null && item.deletedAt !== undefined;
                         
@@ -580,8 +589,6 @@
                     });
                     
                     renderItems();
-                    
-                    // Validate cart against current inventory
                     validateCart();
                 });
                 
@@ -599,11 +606,42 @@
             updateCartUI();
         });
 
+        // FIX 3 & 5: Apply Cloudinary transformations to any URL
+        function getTransformedImageUrl(url, width, height) {
+            if (!url) return 'https://via.placeholder.com/400x350?text=No+Image';
+            
+            // If already a Cloudinary URL with transformations, return as-is
+            if (url.includes('/upload/') && (url.includes('w_') || url.includes('q_auto'))) {
+                // Replace existing dimensions if different
+                if (width && height) {
+                    return url.replace(/w_\d+,h_\d+,c_\w+/g, `w_${width},h_${height},${IMAGE_CONFIG.fit}`);
+                }
+                return url;
+            }
+            
+            // If Cloudinary URL without transformations, add them
+            if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+                const transform = `w_${width || IMAGE_CONFIG.cardWidth},h_${height || IMAGE_CONFIG.cardHeight},${IMAGE_CONFIG.fit},${IMAGE_CONFIG.quality},${IMAGE_CONFIG.format}`;
+                return url.replace('/upload/', `/upload/${transform}/`);
+            }
+            
+            // Non-Cloudinary URLs return as-is (with placeholder fallback)
+            return url;
+        }
+
+        // FIX 3: Get responsive image srcset for different screen sizes
+        function getResponsiveSrc(url, baseWidth) {
+            const sizes = [400, 800, 1200];
+            return sizes.map(w => {
+                const transformed = getTransformedImageUrl(url, w, Math.round(w * 0.875));
+                return `${transformed} ${w}w`;
+            }).join(', ');
+        }
+
         function renderItems() {
             const container = document.getElementById('itemsContainer');
             const now = new Date();
             
-            // Filter items for display
             let filtered = allItems.filter(item => {
                 if (currentFilter !== 'all' && item.category !== currentFilter) return false;
                 return true;
@@ -626,11 +664,29 @@
                 const isDeleted = item.deletedAt !== null && item.deletedAt !== undefined;
                 const isUnavailable = isExpired || isDeleted;
                 
+                // FIX 3 & 5: Force resize with Cloudinary transformations
+                const imageUrl = getTransformedImageUrl(
+                    item.imageUrl || item.thumbnailUrl, 
+                    IMAGE_CONFIG.cardWidth, 
+                    IMAGE_CONFIG.cardHeight
+                );
+                
+                // Generate srcset for responsive images
+                const srcset = getResponsiveSrc(item.imageUrl || item.thumbnailUrl, IMAGE_CONFIG.cardWidth);
+                
                 return `
                     <div class="item-card ${isSelected ? 'selected' : ''} ${isUnavailable ? 'unavailable' : ''}" 
                          onclick="${isUnavailable ? '' : `toggleCart('${item.id}')`}">
                         <div class="item-image">
-                            <img src="${item.imageUrl}" alt="${item.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x280?text=No+Image'">
+                            <img 
+                                src="${imageUrl}" 
+                                srcset="${srcset}"
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                alt="${item.name}" 
+                                loading="${IMAGE_CONFIG.loading}"
+                                decoding="async"
+                                onerror="this.src='https://via.placeholder.com/400x350?text=No+Image'"
+                            >
                             <span class="item-badge ${isUnavailable ? 'sold-out' : ''}">
                                 ${isUnavailable ? (isDeleted ? 'Removed' : 'Expired') : item.category}
                             </span>
@@ -658,7 +714,6 @@
         }
 
         function toggleCart(id) {
-            // Prevent adding unavailable items
             if (!validItemIds.has(id)) {
                 showToast('This item is no longer available');
                 return;
@@ -672,17 +727,22 @@
             } else {
                 const item = allItems.find(i => i.id === id);
                 if (item) {
-                    // Only add if still valid
                     const now = new Date();
                     const isExpired = item.expiry && new Date(item.expiry) < now;
                     const isDeleted = item.deletedAt !== null && item.deletedAt !== undefined;
                     
                     if (!isExpired && !isDeleted) {
-                        cart.push(item);
+                        // FIX 3: Store transformed URLs in cart for purchase page
+                        const cartItem = {
+                            ...item,
+                            imageUrl: getTransformedImageUrl(item.imageUrl, 200, 200),
+                            originalUrl: item.imageUrl
+                        };
+                        cart.push(cartItem);
                         showToast('Item added to cart');
                     } else {
                         showToast('This item is no longer available');
-                        renderItems(); // Refresh to show updated status
+                        renderItems();
                     }
                 }
             }
@@ -697,11 +757,9 @@
             
             const originalCount = cart.length;
             const now = new Date();
-            
             const removedItems = [];
             
             cart = cart.filter(item => {
-                // Check if item still exists in inventory
                 const liveItem = allItems.find(i => i.id === item.id);
                 
                 if (!liveItem) {
@@ -709,13 +767,11 @@
                     return false;
                 }
                 
-                // Check expiry
                 if (liveItem.expiry && new Date(liveItem.expiry) < now) {
                     removedItems.push(item.name);
                     return false;
                 }
                 
-                // Check deletion
                 if (liveItem.deletedAt !== null && liveItem.deletedAt !== undefined) {
                     removedItems.push(item.name);
                     return false;
@@ -729,9 +785,8 @@
             if (removedCount > 0) {
                 saveCart();
                 updateCartUI();
-                renderItems(); // Refresh card states
+                renderItems();
                 
-                // Show sync notice
                 const notice = document.getElementById('syncNotice');
                 const noticeText = notice.querySelector('span');
                 noticeText.textContent = `${removedCount} item(s) removed - no longer available`;
@@ -769,7 +824,6 @@
             updateFilterButtons();
             renderItems();
             
-            // Update URL
             const url = new URL(window.location);
             if (cat === 'all') url.searchParams.delete('cat');
             else url.searchParams.set('cat', cat);
@@ -793,7 +847,6 @@
         }
 
         function showToast(message) {
-            // Remove existing toast if any
             const existingToast = document.querySelector('.toast-notification');
             if (existingToast) existingToast.remove();
             
@@ -816,12 +869,10 @@
             toast.textContent = message;
             document.body.appendChild(toast);
             
-            // Animate in
             requestAnimationFrame(() => {
                 toast.style.transform = 'translateX(-50%) translateY(0)';
             });
             
-            // Remove after delay
             setTimeout(() => {
                 toast.style.transform = 'translateX(-50%) translateY(100px)';
                 setTimeout(() => toast.remove(), 300);
