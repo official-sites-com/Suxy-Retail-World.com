@@ -249,6 +249,15 @@
             transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(37, 211, 102, 0.3);
         }
+        .btn-bank {
+            background: #d4af37;
+            color: #000;
+        }
+        .btn-bank:hover {
+            background: #b8960c;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        }
         .btn-phone { 
             background: #007bff; 
             color: #fff; 
@@ -493,9 +502,17 @@
                 
                 <div class="box">
                     <h2><i class="fas fa-credit-card"></i> Complete Order</h2>
+                    
+                    <!-- WhatsApp Purchase -->
                     <a id="waLink" href="#" target="_blank" class="btn btn-whatsapp" onclick="handlePurchase()">
                         <i class="fab fa-whatsapp"></i> Purchase via WhatsApp
                     </a>
+                    
+                    <!-- Bank Transfer Purchase -->
+                    <a href="payment.html" class="btn btn-bank" id="bankBtn" onclick="saveCartToSession()">
+                        <i class="fas fa-university"></i> Purchase via Bank Transfer
+                    </a>
+                    
                     <a href="tel:+2347012305403" class="btn btn-phone">
                         <i class="fas fa-phone"></i> Call Now
                     </a>
@@ -667,6 +684,7 @@
             const totalRow = document.getElementById('totalRow');
             const totalPrice = document.getElementById('totalPrice');
             const waLink = document.getElementById('waLink');
+            const bankBtn = document.getElementById('bankBtn');
             
             if (cart.length === 0) {
                 container.innerHTML = `
@@ -681,11 +699,15 @@
                 totalRow.style.display = 'none';
                 waLink.style.opacity = '0.5';
                 waLink.style.pointerEvents = 'none';
+                bankBtn.style.opacity = '0.5';
+                bankBtn.style.pointerEvents = 'none';
                 return;
             }
             
             waLink.style.opacity = '1';
             waLink.style.pointerEvents = 'auto';
+            bankBtn.style.opacity = '1';
+            bankBtn.style.pointerEvents = 'auto';
             
             let total = 0;
             let message = "Hello SUXY Retail World!%0A%0AI would like to order the following items:%0A%0A";
@@ -714,6 +736,11 @@
             
             message += `Total Amount: ₦${total.toLocaleString()}%0A%0APlease send your payment details. Thank you!`;
             waLink.href = `https://wa.me/2347012305403?text=${message}`;
+        }
+
+        function saveCartToSession() {
+            // Save cart data to sessionStorage for the payment page
+            sessionStorage.setItem('suxy_payment_cart', JSON.stringify(cart));
         }
 
         function handlePurchase() {
