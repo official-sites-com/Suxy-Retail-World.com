@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUXY Retail World | Bank Transfer Payment</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background-color: #0a0a0a; 
+            color: #f5f5f0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+        }
+        .container { max-width: 800px; margin: 0 auto; padding: 0 20px; }
+
+        /* Navigation */
+        nav { 
+            background: rgba(26, 26, 26, 0.95); 
+            padding: 15px 0; 
+            position: fixed; 
+            width: 100%; 
+            top: 0; 
+            z-index: 1000;
+            border-bottom: 1px solid #d4af37;
+        }
+        .nav-flex { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .logo { 
+            font-family: Georgia, 'Times New Roman', serif;
+            color: #d4af37; 
+            font-size: 28px; 
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .logo span { 
+            color: #fff; 
+            font-size: 11px; 
+            display: block; 
+            font-family: sans-serif; 
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+        .nav-links { display: flex; gap: 30px; }
+        .nav-links a { 
+            color: #ccc; 
+            text-decoration: none; 
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            padding: 5px 0;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-links a:hover, .nav-links a.active { 
+            color: #d4af37;
+            border-bottom-color: #d4af37;
+        }
+        .mobile-menu-btn { 
+            display: none; 
+            background: none; 
+            border: none; 
+            color: #fff; 
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* Main */
+        main { padding-top: 120px; min-height: 100vh; padding-bottom: 80px; }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .page-header h1 {
+            font-family: Georgia, serif;
+            font-size: 32px;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+        .page-header h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background: #d4af37;
+            margin: 20px auto 0;
+        }
+        .page-header p {
+            color: #999;
+            font-size: 16px;
+        }
+
+        /* Box Styles */
+        .box { 
+            background: #111; 
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 35px;
+            margin-bottom: 30px;
+        }
+        .box h2 { 
+            color: #d4af37; 
+            font-family: Georgia, serif;
+            font-size: 22px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .instructions h3 {
+            color: #d4af37;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .instructions ol {
+            color: #ccc;
+            padding-left: 20px;
+            line-height: 2;
+        }
+        .instructions ol li {
+            margin-bottom: 8px;
+        }
+        .instructions .highlight {
+            color: #d4af37;
+            font-weight: 600;
+        }
+
+        /* Bank Details */
+        .bank-details {
+            background: #0a0a0a;
+            border: 2px solid #d4af37;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .bank-details .bank-icon {
+            font-size: 48px;
+            color: #d4af37;
+            margin-bottom: 20px;
+        }
+        .bank-details .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #333;
+        }
+        .bank-details .detail-row:last-child {
+            border-bottom: none;
+        }
+        .bank-details .label {
+            color: #999;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .bank-details .value {
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+        .bank-details .account-number {
+            font-size: 24px;
+            color: #d4af37;
+            letter-spacing: 2px;
+        }
+
+        /* Copy Button */
+        .copy-btn {
+            background: #d4af37;
+            color: #000;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        .copy-btn:hover {
+            background: #b8960c;
+            transform: scale(1.05);
+        }
+        .copy-btn.copied {
+            background: #25d366;
+            color: #fff;
+        }
+
+        /* Form Styles */
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            color: #ccc;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .form-group input, 
+        .form-group textarea,
+        .form-group select { 
+            width: 100%; 
+            padding: 15px; 
+            background: #0a0a0a; 
+            border: 1px solid #444; 
+            border-radius: 10px; 
+            color: #fff; 
+            font-family: inherit;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        .form-group input:focus, 
+        .form-group textarea:focus,
+        .form-group select:focus { 
+            outline: none; 
+            border-color: #d4af37;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.1);
+        }
+        .form-group input::placeholder,
+        .form-group textarea::placeholder { color: #555; }
+
+        /* Action Buttons */
+        .btn { 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn i { font-size: 20px; }
+        .btn-bank {
+            background: #d4af37;
+            color: #000;
+        }
+        .btn-bank:hover {
+            background: #b8960c;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        }
+        .btn-whatsapp { 
+            background: #25d366; 
+            color: #fff; 
+        }
+        .btn-whatsapp:hover { 
+            background: #128c7e; 
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(37, 211, 102, 0.3);
+        }
+        .btn-gold { 
+            background: transparent; 
+            border: 2px solid #d4af37; 
+            color: #d4af37;
+        }
+        .btn-gold:hover { 
+            background: #d4af37; 
+            color: #000;
+            transform: translateY(-3px);
+        }
+
+        /* Order Summary */
+        .order-summary {
+            background: #0a0a0a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #333;
+        }
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        .order-item .item-name {
+            color: #ccc;
+        }
+        .order-item .item-price {
+            color: #d4af37;
+            font-weight: bold;
+        }
+        .order-total {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 15px;
+            border-top: 2px solid #d4af37;
+            margin-top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .order-total span:first-child { color: #fff; }
+        .order-total span:last-child { color: #d4af37; }
+
+        /* Payment Made Section */
+        .payment-made-section {
+            display: none;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #333;
+        }
+        .payment-made-section.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .payment-made-section h3 {
+            color: #fff;
+            font-family: Georgia, serif;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .payment-made-section p {
+            color: #999;
+            text-align: center;
+            margin-bottom: 25px;
+            line-height: 1.8;
+        }
+
+        /* Toast */
+        .toast { 
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px;
+            background: #d4af37;
+            color: #000;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 16px;
+            transform: translateY(150px);
+            opacity: 0;
+            transition: all 0.4s;
+            z-index: 3000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.error {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        /* Footer */
+        footer { 
+            background: #000; 
+            padding: 50px 0 30px; 
+            text-align: center;
+            border-top: 1px solid #222;
+        }
+        .social-links { 
+            display: flex; 
+            justify-content: center; 
+            gap: 40px; 
+            margin-bottom: 30px; 
+        }
+        .social-links a { 
+            color: #666; 
+            font-size: 28px;
+            transition: all 0.3s;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px solid #333;
+            text-decoration: none;
+        }
+        .social-links a:hover { 
+            color: #fff;
+            border-color: currentColor;
+            transform: translateY(-3px);
+        }
+        .social-links a.whatsapp:hover { color: #25d366; border-color: #25d366; }
+        .social-links a.tiktok:hover { color: #ff0050; border-color: #ff0050; }
+        .social-links a.phone:hover { color: #007bff; border-color: #007bff; }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .mobile-menu-btn { display: block; }
+            .page-header h1 { font-size: 26px; }
+            .box { padding: 25px; }
+            .bank-details .detail-row {
+                flex-direction: column;
+                gap: 5px;
+                text-align: center;
+            }
+            .bank-details .account-number {
+                font-size: 20px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="container nav-flex">
+            <a href="index.html" class="logo">
+                SUXY
+                <span>Retail World</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="order.html">Order</a>
+                <a href="purchase.html">Purchase</a>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div id="mobileMenu" style="display: none;">
+            <div class="container" style="padding: 20px;">
+                <a href="index.html" style="display: block; color: #ccc; padding: 12px 0; border-bottom: 1px solid #333; text-decoration: none;">Home</a>
+                <a href="order.html" style="display: block; color: #ccc; padding: 12px 0; border-bottom: 1px solid #333; text-decoration: none;">Order</a>
+                <a href="purchase.html" style="display: block; color: #d4af37; padding: 12px 0; text-decoration: none;">Purchase</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="page-header">
+            <h1>Bank Transfer Payment</h1>
+            <p>Complete your purchase via bank transfer</p>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <h3><i class="fas fa-info-circle"></i> How to Pay</h3>
+            <ol>
+                <li>Fill in your details below and click <span class="highlight">"Make Payment"</span></li>
+                <li>The account number will be <span class="highlight">copied to your clipboard</span> automatically</li>
+                <li>You will be redirected to your bank app — just <span class="highlight">paste the account number</span> and complete the transfer</li>
+                <li>After payment, return here and click <span class="highlight">"I've Made Payment"</span></li>
+                <li>You will be redirected to WhatsApp with your order details pre-filled — <span class="highlight">attach your payment receipt</span> and send</li>
+            </ol>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="box">
+            <h2><i class="fas fa-shopping-bag"></i> Order Summary</h2>
+            <div id="orderSummary" class="order-summary">
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 15px; display: block;"></i>
+                    <p>Loading your order...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bank Details -->
+        <div class="box">
+            <h2><i class="fas fa-university"></i> Bank Account Details</h2>
+            <div class="bank-details">
+                <div class="bank-icon">
+                    <i class="fas fa-landmark"></i>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Bank Name</span>
+                    <span class="value">Palmpay</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Account Name</span>
+                    <span class="value">Success Igiehon</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Account Number</span>
+                    <span class="value account-number" id="accountNumber">9065553499</span>
+                </div>
+                <button class="copy-btn" id="copyBtn" onclick="copyAccountNumber()">
+                    <i class="fas fa-copy"></i> Copy Account Number
+                </button>
+            </div>
+        </div>
+
+        <!-- Customer Details Form -->
+        <div class="box">
+            <h2><i class="fas fa-user"></i> Your Details</h2>
+            <form id="paymentForm" onsubmit="handleMakePayment(event)">
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="phoneNumber">Phone Number</label>
+                    <input type="tel" id="phoneNumber" placeholder="e.g. 08012345678" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address (Optional)</label>
+                    <input type="email" id="email" placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="deliveryType">Delivery Type</label>
+                    <select id="deliveryType" required onchange="toggleLocationField()">
+                        <option value="">Select delivery type</option>
+                        <option value="pickup">Pickup (Ekpoma/Benin)</option>
+                        <option value="waybill">Waybill (Lagos & Others)</option>
+                        <option value="doorstep">Doorstep Delivery</option>
+                    </select>
+                </div>
+                <div class="form-group" id="locationGroup">
+                    <label for="location">Delivery Address / Location</label>
+                    <textarea id="location" rows="3" placeholder="Enter your full delivery address or pickup location" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="state">State / City</label>
+                    <input type="text" id="state" placeholder="e.g. Edo State, Benin City" required>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Additional Notes (Optional)</label>
+                    <textarea id="notes" rows="2" placeholder="Any special instructions for your order..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-bank" id="makePaymentBtn">
+                    <i class="fas fa-mobile-alt"></i> Make Payment
+                </button>
+            </form>
+
+            <!-- I've Made Payment Section -->
+            <div class="payment-made-section" id="paymentMadeSection">
+                <h3><i class="fas fa-check-circle"></i> Payment Complete?</h3>
+                <p>
+                    If you have successfully made the transfer, click the button below to confirm your payment. 
+                    You will be redirected to WhatsApp with your full order details pre-filled. 
+                    <br><br>
+                    <strong style="color: #d4af37;">Please attach your payment receipt screenshot before sending the message.</strong>
+                </p>
+                <a href="#" id="confirmPaymentBtn" class="btn btn-whatsapp" onclick="handleConfirmPayment()">
+                    <i class="fab fa-whatsapp"></i> I've Made Payment
+                </a>
+                <a href="purchase.html" class="btn btn-gold" style="margin-top: 10px;">
+                    <i class="fas fa-arrow-left"></i> Back to Purchase Page
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="social-links">
+            <a href="https://wa.me/2347012305403" target="_blank" class="whatsapp" title="WhatsApp">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+            <a href="https://vm.tiktok.com/ZS9LqM85v8ubD-5rRDV/" target="_blank" class="tiktok" title="TikTok">
+                <i class="fab fa-tiktok"></i>
+            </a>
+            <a href="tel:+2347012305403" class="phone" title="Call Now">
+                <i class="fas fa-phone"></i>
+            </a>
+        </div>
+        <p style="color: #555; font-size: 14px;">&copy; 2026 SUXY Retail World. All rights reserved.</p>
+    </footer>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Bank Account Details
+        const BANK_ACCOUNT = "9065553499";
+        const BANK_NAME = "Palmpay";
+        const ACCOUNT_NAME = "Success Igiehon";
+        const WHATSAPP_NUMBER = "2347012305403";
+
+        let cart = [];
+        let customerDetails = {};
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrderSummary();
+        });
+
+        function loadOrderSummary() {
+            // Get cart from sessionStorage (passed from purchase page)
+            const cartData = sessionStorage.getItem('suxy_payment_cart');
+
+            if (!cartData) {
+                document.getElementById('orderSummary').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 20px; display: block;"></i>
+                        <h3>No items found</h3>
+                        <p>Your cart appears to be empty. Please go back and select items.</p>
+                        <br>
+                        <a href="order.html" style="color: #d4af37; text-decoration: none; font-weight: 600;">
+                            Start Shopping <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                `;
+                document.getElementById('makePaymentBtn').style.display = 'none';
+                return;
+            }
+
+            cart = JSON.parse(cartData);
+
+            if (cart.length === 0) {
+                document.getElementById('orderSummary').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-shopping-basket" style="font-size: 48px; margin-bottom: 20px; display: block;"></i>
+                        <h3>Your cart is empty</h3>
+                        <p>Browse our collection and select items to purchase</p>
+                        <br>
+                        <a href="order.html" style="color: #d4af37; text-decoration: none; font-weight: 600;">
+                            Start Shopping <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                `;
+                document.getElementById('makePaymentBtn').style.display = 'none';
+                return;
+            }
+
+            let total = 0;
+            let html = '';
+
+            cart.forEach(item => {
+                total += Number(item.price);
+                html += `
+                    <div class="order-item">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-price">₦${item.price.toLocaleString()}</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                <div class="order-total">
+                    <span>Total Amount</span>
+                    <span>₦${total.toLocaleString()}</span>
+                </div>
+            `;
+
+            document.getElementById('orderSummary').innerHTML = html;
+        }
+
+        function copyAccountNumber() {
+            navigator.clipboard.writeText(BANK_ACCOUNT).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                btn.classList.add('copied');
+                showToast('Account number copied to clipboard!');
+
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-copy"></i> Copy Account Number';
+                    btn.classList.remove('copied');
+                }, 3000);
+            }).catch(err => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = BANK_ACCOUNT;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                showToast('Account number copied to clipboard!');
+            });
+        }
+
+        function toggleLocationField() {
+            const deliveryType = document.getElementById('deliveryType').value;
+            const locationLabel = document.querySelector('#locationGroup label');
+
+            if (deliveryType === 'pickup') {
+                locationLabel.textContent = 'Pickup Location';
+                document.getElementById('location').placeholder = 'Enter your preferred pickup location (Ekpoma/Benin)';
+            } else if (deliveryType === 'waybill') {
+                locationLabel.textContent = 'Waybill Destination';
+                document.getElementById('location').placeholder = 'Enter your waybill destination address';
+            } else {
+                locationLabel.textContent = 'Delivery Address';
+                document.getElementById('location').placeholder = 'Enter your full delivery address';
+            }
+        }
+
+        function handleMakePayment(e) {
+            e.preventDefault();
+
+            // Collect customer details
+            customerDetails = {
+                fullName: document.getElementById('fullName').value.trim(),
+                phoneNumber: document.getElementById('phoneNumber').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                deliveryType: document.getElementById('deliveryType').value,
+                location: document.getElementById('location').value.trim(),
+                state: document.getElementById('state').value.trim(),
+                notes: document.getElementById('notes').value.trim()
+            };
+
+            // Save details to sessionStorage
+            sessionStorage.setItem('suxy_customer_details', JSON.stringify(customerDetails));
+
+            // Copy account number to clipboard
+            copyAccountNumber();
+
+            // Show payment made section
+            document.getElementById('paymentMadeSection').classList.add('show');
+
+            // Scroll to payment made section
+            setTimeout(() => {
+                document.getElementById('paymentMadeSection').scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+
+            // Try to open bank app
+            openBankApp();
+
+            showToast('Account number copied! Opening bank app...');
+        }
+
+        function openBankApp() {
+            // Try multiple bank app schemes
+            const bankSchemes = [
+                'palmpay://',  // Palmpay
+                'bank://',
+                'intent://'
+            ];
+
+            // For mobile devices, try to open banking apps
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                // Try to open Palmpay or general bank app
+                window.location.href = 'palmpay://';
+
+                // Fallback after short delay
+                setTimeout(() => {
+                    // If still on page, show message
+                    showToast('Please open your bank app manually and paste the account number');
+                }, 2000);
+            }
+        }
+
+        function handleConfirmPayment() {
+            // Get cart and customer details
+            const cartData = sessionStorage.getItem('suxy_payment_cart');
+            const detailsData = sessionStorage.getItem('suxy_customer_details');
+
+            if (!cartData || !detailsData) {
+                showToast('Order details not found. Please start over.', true);
+                return;
+            }
+
+            const cart = JSON.parse(cartData);
+            const details = JSON.parse(detailsData);
+
+            // Build WhatsApp message
+            let total = 0;
+            let message = "Hello SUXY Retail World!%0A%0A";
+            message += "*BANK TRANSFER PAYMENT CONFIRMATION*%0A%0A";
+            message += "*Customer Details:*%0A";
+            message += `Name: ${details.fullName}%0A`;
+            message += `Phone: ${details.phoneNumber}%0A`;
+            if (details.email) message += `Email: ${details.email}%0A`;
+            message += `Delivery: ${details.deliveryType.toUpperCase()}%0A`;
+            message += `Location: ${details.location}%0A`;
+            message += `State/City: ${details.state}%0A`;
+            if (details.notes) message += `Notes: ${details.notes}%0A`;
+            message += "%0A*Order Items:*%0A%0A";
+
+            cart.forEach((item, idx) => {
+                total += Number(item.price);
+                message += `${idx + 1}. ${item.name}%0A`;
+                message += `   Price: ₦${item.price.toLocaleString()}%0A`;
+                message += `   Category: ${item.category}%0A%0A`;
+            });
+
+            message += `*Total Amount: ₦${total.toLocaleString()}*%0A%0A`;
+            message += `*Bank: ${BANK_NAME}*%0A`;
+            message += `*Account: ${ACCOUNT_NAME}*%0A`;
+            message += `*Account No: ${BANK_ACCOUNT}*%0A%0A`;
+            message += "I have made the payment. Please find my payment receipt attached below.%0A%0A";
+            message += "Thank you!";
+
+            // Clear cart from localStorage (order completed)
+            localStorage.removeItem('suxy_cart');
+            sessionStorage.removeItem('suxy_payment_cart');
+            sessionStorage.removeItem('suxy_customer_details');
+
+            // Open WhatsApp with pre-filled message
+            const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+            window.location.href = waUrl;
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = isError ? 'toast error show' : 'toast show';
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+    </script>
+
+</body>
+</html>
