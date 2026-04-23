@@ -13,7 +13,7 @@
             line-height: 1.6;
         }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-        
+
         /* Navigation */
         nav { 
             background: rgba(26, 26, 26, 0.95); 
@@ -77,10 +77,10 @@
             font-size: 20px;
             cursor: pointer;
         }
-        
+
         /* Main */
         main { padding-top: 120px; min-height: 100vh; padding-bottom: 80px; }
-        
+
         /* Page Header */
         .page-header {
             text-align: center;
@@ -104,14 +104,14 @@
             color: #999;
             font-size: 18px;
         }
-        
+
         /* Two Column Layout */
         .two-col { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
             gap: 40px; 
         }
-        
+
         /* Box Styles */
         .box { 
             background: #111; 
@@ -131,7 +131,7 @@
             align-items: center;
             gap: 12px;
         }
-        
+
         /* Cart Items */
         .cart-item { 
             display: flex; 
@@ -186,7 +186,7 @@
             color: #dc3545;
             transform: scale(1.2);
         }
-        
+
         .total-row { 
             display: flex; 
             justify-content: space-between;
@@ -201,7 +201,7 @@
             color: #d4af37;
             font-size: 28px;
         }
-        
+
         .empty-cart { 
             text-align: center; 
             padding: 60px 20px;
@@ -218,7 +218,7 @@
             text-decoration: none;
             font-weight: 600;
         }
-        
+
         /* Action Buttons */
         .btn { 
             display: flex;
@@ -277,7 +277,7 @@
             color: #000;
             transform: translateY(-3px);
         }
-        
+
         .note { 
             text-align: center; 
             color: #666; 
@@ -286,7 +286,7 @@
             padding-top: 20px;
             border-top: 1px solid #333;
         }
-        
+
         /* Reviews */
         .review-item { 
             background: #0a0a0a;
@@ -323,7 +323,7 @@
             color: #666; 
             font-size: 13px;
         }
-        
+
         .review-form { 
             margin-top: 30px; 
             padding-top: 30px; 
@@ -356,7 +356,7 @@
         }
         .form-group input::placeholder,
         .form-group textarea::placeholder { color: #555; }
-        
+
         /* Removed Items Notice */
         .removed-notice {
             background: rgba(220, 53, 69, 0.1);
@@ -373,7 +373,7 @@
         .removed-notice i {
             font-size: 18px;
         }
-        
+
         /* Footer */
         footer { 
             background: #000; 
@@ -408,7 +408,7 @@
         .social-links a.whatsapp:hover { color: #25d366; border-color: #25d366; }
         .social-links a.tiktok:hover { color: #ff0050; border-color: #ff0050; }
         .social-links a.phone:hover { color: #007bff; border-color: #007bff; }
-        
+
         /* Toast */
         .toast { 
             position: fixed; 
@@ -431,7 +431,7 @@
             background: #dc3545;
             color: #fff;
         }
-        
+
         /* Mobile */
         @media (max-width: 768px) {
             .two-col { grid-template-columns: 1fr; gap: 20px; }
@@ -483,7 +483,7 @@
             <h1>Review & Complete Purchase</h1>
             <p>Review your selected items and complete your order</p>
         </div>
-        
+
         <div class="two-col">
             <!-- Left: Order Summary -->
             <div>
@@ -499,20 +499,20 @@
                         <span id="totalPrice">₦0</span>
                     </div>
                 </div>
-                
+
                 <div class="box">
                     <h2><i class="fas fa-credit-card"></i> Complete Order</h2>
-                    
+
                     <!-- WhatsApp Purchase -->
                     <a id="waLink" href="#" target="_blank" class="btn btn-whatsapp" onclick="handlePurchase()">
                         <i class="fab fa-whatsapp"></i> Purchase via WhatsApp
                     </a>
-                    
+
                     <!-- Bank Transfer Purchase -->
                     <a href="payment.html" class="btn btn-bank" id="bankBtn" onclick="saveCartToSession()">
                         <i class="fas fa-university"></i> Purchase via Bank Transfer
                     </a>
-                    
+
                     <a href="tel:+2347012305403" class="btn btn-phone">
                         <i class="fas fa-phone"></i> Call Now
                     </a>
@@ -522,13 +522,13 @@
                     </p>
                 </div>
             </div>
-            
+
             <!-- Right: Reviews -->
             <div>
                 <div class="box">
                     <h2><i class="fas fa-comments"></i> Customer Reviews</h2>
                     <div id="reviewsList" style="max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
-                    
+
                     <div class="review-form">
                         <h3>Share Your Experience</h3>
                         <form onsubmit="submitReview(event)">
@@ -590,22 +590,22 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadCart();
             updateCartBadge();
-            
+
             try {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
                 loadReviews();
-                
+
                 // Real-time reviews
                 db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(() => {
                     loadReviews();
                 });
-                
+
                 // Real-time item validation - clean cart if items deleted/expired
                 db.collection('items').onSnapshot((snapshot) => {
                     const now = new Date();
                     validItemIds = new Set();
-                    
+
                     snapshot.docs.forEach(doc => {
                         const item = doc.data();
                         // Only track items that are NOT expired and NOT deleted
@@ -615,13 +615,13 @@
                             }
                         }
                     });
-                    
+
                     // Clean cart if needed (only if not currently purchasing)
                     if (!purchaseInitiated) {
                         validateCartAgainstInventory();
                     }
                 });
-                
+
             } catch (e) {
                 console.error('Firebase error:', e);
             }
@@ -640,41 +640,41 @@
 
         function validateCartAgainstInventory() {
             if (validItemIds.size === 0) return;
-            
+
             const originalCount = cart.length;
             const now = new Date();
-            
+
             cart = cart.filter(item => {
                 // Remove if item ID not in valid items set
                 if (!validItemIds.has(item.id)) return false;
-                
+
                 // Double-check expiry from cart data itself
                 if (item.expiry && new Date(item.expiry) < now) return false;
-                
+
                 // Check if marked deleted in cart data
                 if (item.deletedAt) return false;
-                
+
                 return true;
             });
-            
+
             const removedCount = originalCount - cart.length;
-            
+
             if (removedCount > 0) {
                 localStorage.setItem('suxy_cart', JSON.stringify(cart));
                 showToast(`${removedCount} unavailable item(s) removed from cart`, true);
-                
+
                 // Show notice
                 const notice = document.getElementById('removedNotice');
                 const noticeText = document.getElementById('removedText');
                 noticeText.textContent = `${removedCount} item(s) were removed from your cart because they are no longer available.`;
                 notice.style.display = 'flex';
-                
+
                 // Hide notice after 5 seconds
                 setTimeout(() => {
                     notice.style.display = 'none';
                 }, 5000);
             }
-            
+
             renderCart();
             updateCartBadge();
         }
@@ -685,7 +685,7 @@
             const totalPrice = document.getElementById('totalPrice');
             const waLink = document.getElementById('waLink');
             const bankBtn = document.getElementById('bankBtn');
-            
+
             if (cart.length === 0) {
                 container.innerHTML = `
                     <div class="empty-cart">
@@ -703,19 +703,19 @@
                 bankBtn.style.pointerEvents = 'none';
                 return;
             }
-            
+
             waLink.style.opacity = '1';
             waLink.style.pointerEvents = 'auto';
             bankBtn.style.opacity = '1';
             bankBtn.style.pointerEvents = 'auto';
-            
+
             let total = 0;
             let message = "Hello SUXY Retail World!%0A%0AI would like to order the following items:%0A%0A";
-            
+
             container.innerHTML = cart.map((item, idx) => {
                 total += Number(item.price);
                 message += `${idx + 1}. ${item.name}%0A   Price: ₦${item.price.toLocaleString()}%0A   Category: ${item.category}%0A%0A`;
-                
+
                 return `
                     <div class="cart-item">
                         <img src="${item.imageUrl}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/100?text=No+Image'">
@@ -730,10 +730,10 @@
                     </div>
                 `;
             }).join('');
-            
+
             totalPrice.textContent = '₦' + total.toLocaleString();
             totalRow.style.display = 'flex';
-            
+
             message += `Total Amount: ₦${total.toLocaleString()}%0A%0APlease send your payment details. Thank you!`;
             waLink.href = `https://wa.me/2347012305403?text=${message}`;
         }
@@ -778,7 +778,7 @@
             try {
                 const snapshot = await db.collection('reviews').orderBy('timestamp', 'desc').get();
                 const reviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                
+
                 const container = document.getElementById('reviewsList');
                 if (reviews.length === 0) {
                     container.innerHTML = `
@@ -789,7 +789,7 @@
                     `;
                     return;
                 }
-                
+
                 container.innerHTML = reviews.map(r => `
                     <div class="review-item">
                         <p>"${r.text}"</p>
@@ -810,32 +810,32 @@
 
         async function submitReview(e) {
             e.preventDefault();
-            
+
             if (!db) {
                 showToast('Database not connected', true);
                 return;
             }
-            
+
             const name = document.getElementById('reviewName').value.trim();
             const text = document.getElementById('reviewText').value.trim();
-            
+
             if (!name || !text) {
                 showToast('Please fill all fields', true);
                 return;
             }
-            
+
             try {
                 await db.collection('reviews').add({
                     name: name,
                     text: text,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                
+
                 showToast('Thank you for your review!');
                 document.getElementById('reviewName').value = '';
                 document.getElementById('reviewText').value = '';
                 loadReviews();
-                
+
             } catch (err) {
                 console.error('Review error:', err);
                 showToast('Error submitting review', true);
@@ -851,7 +851,7 @@
             const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.className = isError ? 'toast error show' : 'toast show';
-            
+
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 4000);
